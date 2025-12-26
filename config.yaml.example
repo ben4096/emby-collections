@@ -1,0 +1,77 @@
+# Emby Collection Manager Configuration
+# Copy this file to config.yaml and fill in your details
+
+emby:
+  # Your Emby server URL (including port)
+  url: "http://localhost:8096"
+
+  # Emby API key (get it from Emby Dashboard > Advanced > Security > API Keys)
+  api_key: "YOUR_EMBY_API_KEY_HERE"
+
+  # User ID to create collections for (optional, leave empty for admin)
+  user_id: ""
+
+# MDBList configuration
+mdblist:
+  # Get your API key from https://mdblist.com/preferences/
+  api_key: "YOUR_MDBLIST_API_KEY_HERE"
+
+# Trakt configuration
+trakt:
+  # Get your API key from https://trakt.tv/oauth/applications
+  client_id: "YOUR_TRAKT_CLIENT_ID_HERE"
+
+  # Optional: for user-specific lists (not needed for public trending/popular)
+  client_secret: ""
+  access_token: ""
+
+# List of collections to create/update
+collections:
+  # MDBList examples
+  - name: "Top Watched This Week"
+    source: "mdblist"
+    # The list URL or ID
+    list_id: "linaspurinis/top-watched-movies-of-the-week"
+    # Update frequency (not implemented yet, for future use)
+    # schedule: "daily"
+
+  - name: "IMDb Top 250"
+    source: "mdblist"
+    list_id: "top-rated-movies"
+
+  # Trakt examples
+  - name: "Trending Movies"
+    source: "trakt"
+    # Options: trending, popular, watched, played, anticipated
+    category: "trending"
+    # Optional: limit number of items
+    limit: 50
+
+  - name: "Popular Movies"
+    source: "trakt"
+    category: "popular"
+    limit: 100
+
+# General settings
+settings:
+  # Enable dry-run mode (don't actually create/modify collections)
+  dry_run: false
+
+  # Clear existing collections before syncing (removes items from collection, NOT the movies/shows themselves)
+  # Useful for starting fresh. Can also be enabled with --clear flag
+  clear_collections: false
+
+  # Log level (DEBUG, INFO, WARNING, ERROR)
+  log_level: "INFO"
+
+  # Log file path
+  log_file: "emby_collections.log"
+
+  # Matching strategy: prefer imdb_id, tmdb_id, or title
+  match_priority: ["imdb_id", "tmdb_id", "title"]
+
+  # Remove items from collection if they're no longer in the source list
+  remove_missing: true
+
+  # Schedule time (24h format, e.g., "02:00" for 2 AM)
+  schedule_time: "02:00"
