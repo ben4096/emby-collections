@@ -135,6 +135,48 @@ class EmbyCollectionSync:
             delete_unlisted=settings.get('delete_unlisted', False)
         )
 
+    def is_collection_in_season(self, collection_config: Dict) -> bool:
+        """
+        Check if a collection is currently in season based on seasonal config
+
+        Args:
+            collection_config: Collection configuration dict
+
+        Returns:
+            True if collection should be active, False otherwise
+        """
+        seasonal = collection_config.get('seasonal')
+        if not seasonal:
+            return True  # No seasonal config = always active
+
+        now = datetime.now()
+        current_month = now.month
+        current_day = now.day
+
+        start_month = seasonal.get('start_month')
+        start_day = seasonal.get('start_day')
+        end_month = seasonal.get('end_month')
+        end_day = seasonal.get('end_day')
+
+        if not all([start_month, start_day, end_month, end_day]):
+            self.logger.warning(f"Invalid seasonal config for {collection_config.get('name')}, treating as always active")
+            return True
+
+        # Convert to comparable format (month * 100 + day)
+        current_date = current_month * 100 + current_day
+        start_date = start_month * 100 + start_day
+        end_date = end_month * 100 + end_day
+
+        # Handle year wrap-around (e.g., Dec 15 to Jan 5)
+        if start_date <= end_date:
+            # Normal range within same year
+            in_season = start_date <= current_date <= end_date
+        else:
+            # Range wraps around year boundary
+            in_season = current_date >= start_date or current_date <= end_date
+
+        return in_season
+
     def sync_all_collections(self):
         """Sync all configured collections"""
         collections = self.config.get('collections', [])
@@ -156,6 +198,16 @@ class EmbyCollectionSync:
 
         for collection_config in collections:
             try:
+                collection_name = collection_config.get('name')
+
+                # Check if collection is in season
+                if not self.is_collection_in_season(collection_config):
+                    self.logger.info(f"Collection '{collection_name}' is out of season, hiding it")
+                    # Hide the collection by deleting it (only the collection, not the movies)
+                    self.collection_manager.hide_collection(collection_name)
+                    continue
+
+                # Collection is in season, sync it
                 stats = self.sync_collection(collection_config)
                 total_stats['collections_processed'] += 1
                 total_stats['total_added'] += stats['added']
@@ -194,6 +246,8 @@ class EmbyCollectionSync:
         """
         name = collection_config.get('name')
         source = collection_config.get('source')
+        overview = collection_config.get('overview')
+        image_path = collection_config.get('image')
 
         self.logger.info(f"Syncing collection: {name} (source: {source})")
 
@@ -218,7 +272,7 @@ class EmbyCollectionSync:
                 self.logger.info(f"Sorted {len(movies)} movies by title (A-Z)")
 
         # Sync with Emby
-        stats = self.collection_manager.sync_collection(name, movies)
+        stats = self.collection_manager.sync_collection(name, movies, overview=overview, image_path=image_path)
 
         self.logger.info(f"Collection '{name}': {stats['added']} added, {stats['removed']} removed, "
                         f"{stats['not_found']} not found in library")

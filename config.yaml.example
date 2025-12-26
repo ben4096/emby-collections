@@ -34,10 +34,29 @@ collections:
     list_id: "linaspurinis/top-watched-movies-of-the-week"
     # Update frequency (not implemented yet, for future use)
     # schedule: "daily"
+    # Optional: Add a description/overview for the collection
+    overview: "Most watched movies this week"
 
   - name: "IMDb Top 250"
     source: "mdblist"
     list_id: "top-rated-movies"
+    overview: "Top 250 movies as rated by IMDb users"
+
+  # Seasonal collection example - only appears during specified date range
+  - name: "Christmas Movies"
+    source: "mdblist"
+    list_id: "snoak/christmas-movies"
+    overview: "Merry Christmas everyone!"
+    # Optional: Custom image for the collection (relative to project root or absolute path)
+    image: "images/christmas-movies.jpeg"
+    # Seasonal configuration: only show this collection from Dec 15 to Dec 26
+    seasonal:
+      start_month: 12  # December
+      start_day: 15    # 15th
+      end_month: 12    # December
+      end_day: 26      # 26th (inclusive)
+    # Note: Collections out of season will be automatically hidden (deleted, but movies remain)
+    # The custom image will be automatically restored when the collection is recreated
 
   # Trakt examples
   - name: "Trending Movies"
@@ -46,11 +65,13 @@ collections:
     category: "trending"
     # Optional: limit number of items
     limit: 50
+    overview: "Currently trending movies"
 
   - name: "Popular Movies"
     source: "trakt"
     category: "popular"
     limit: 100
+    overview: "Most popular movies on Trakt"
 
 # General settings
 settings:

@@ -79,21 +79,43 @@ class TraktFetcher:
         }
 
         try:
-            url = f"{self.BASE_URL}{endpoint}"
-            response = self.session.get(url, params=params, timeout=30)
-            response.raise_for_status()
-
-            movies_data = response.json()
-
-            # Normalize the data
+            # Paginate to get more results if limit > 100
             normalized_movies = []
-            for item in movies_data:
-                # Trakt returns either just movie object or {movie: ..., watchers: ...} etc
-                movie = item.get('movie', item) if isinstance(item, dict) else item
+            page = 1
+            per_page = min(100, limit)  # Max 100 per page
 
-                normalized = self._normalize_movie_data(movie)
-                if normalized:
-                    normalized_movies.append(normalized)
+            while len(normalized_movies) < limit:
+                params['page'] = page
+                params['limit'] = per_page
+
+                url = f"{self.BASE_URL}{endpoint}"
+                response = self.session.get(url, params=params, timeout=30)
+                response.raise_for_status()
+
+                movies_data = response.json()
+
+                # If no more results, break
+                if not movies_data:
+                    break
+
+                # Normalize the data
+                for item in movies_data:
+                    # Trakt returns either just movie object or {movie: ..., watchers: ...} etc
+                    movie = item.get('movie', item) if isinstance(item, dict) else item
+
+                    normalized = self._normalize_movie_data(movie)
+                    if normalized:
+                        normalized_movies.append(normalized)
+
+                        # Stop if we've reached the requested limit
+                        if len(normalized_movies) >= limit:
+                            break
+
+                # If we got fewer than per_page results, we've reached the end
+                if len(movies_data) < per_page:
+                    break
+
+                page += 1
 
             self.logger.info(f"Fetched {len(normalized_movies)} movies from Trakt ({category})")
             return normalized_movies

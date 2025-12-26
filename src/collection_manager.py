@@ -34,13 +34,15 @@ class CollectionManager:
         self.logger = logging.getLogger(__name__)
         self.managed_collection_names = set()  # Track which collections we manage
 
-    def sync_collection(self, collection_name: str, movies: List[Dict]) -> Dict[str, int]:
+    def sync_collection(self, collection_name: str, movies: List[Dict], overview: str = None, image_path: str = None) -> Dict[str, int]:
         """
         Sync a collection with a list of movies
 
         Args:
             collection_name: Name of the collection to create/update
             movies: List of movie dicts from external source
+            overview: Optional description/overview for the collection
+            image_path: Optional path to image file for the collection
 
         Returns:
             Dict with stats: {'added': int, 'removed': int, 'total': int, 'not_found': int}
@@ -87,6 +89,14 @@ class CollectionManager:
             collection_id = collection['Id']
             self.logger.info(f"Collection '{collection_name}' already exists (ID: {collection_id})")
 
+            # Update overview if provided
+            if overview:
+                self.emby.update_collection_metadata(collection_id, overview=overview)
+
+            # Update image if provided
+            if image_path:
+                self._set_collection_image(collection_id, image_path)
+
             # Clear collection if requested
             if self.clear_collections:
                 cleared = self._clear_collection(collection_id)
@@ -123,12 +133,22 @@ class CollectionManager:
             # Create new collection
             if self.dry_run:
                 self.logger.info(f"[DRY RUN] Would create collection '{collection_name}' with {len(matched_item_ids)} items")
+                if overview:
+                    self.logger.info(f"[DRY RUN] Would set overview: {overview}")
+                if image_path:
+                    self.logger.info(f"[DRY RUN] Would set image: {image_path}")
                 stats['added'] = len(matched_item_ids)
             else:
                 try:
-                    self.emby.create_collection(collection_name, matched_item_ids)
+                    result = self.emby.create_collection(collection_name, matched_item_ids, overview=overview)
                     stats['added'] = len(matched_item_ids)
                     self.logger.info(f"Created new collection '{collection_name}' with {len(matched_item_ids)} items")
+
+                    # Set image if provided
+                    if image_path and result:
+                        collection_id = result.get('Id')
+                        if collection_id:
+                            self._set_collection_image(collection_id, image_path)
                 except Exception as e:
                     self.logger.error(f"Failed to create collection '{collection_name}': {e}")
 
@@ -352,6 +372,33 @@ class CollectionManager:
 
         return deleted_count
 
+    def hide_collection(self, collection_name: str) -> bool:
+        """
+        Hide a collection by deleting it (only the collection, NOT the movies/shows)
+        Used for seasonal collections that are out of season
+
+        Args:
+            collection_name: Name of collection to hide
+
+        Returns:
+            True if successfully hidden/deleted
+        """
+        collections = self.emby.get_collections(name=collection_name)
+
+        if not collections:
+            self.logger.debug(f"Collection '{collection_name}' doesn't exist, nothing to hide")
+            return True
+
+        collection = collections[0]
+        collection_id = collection['Id']
+
+        if self.dry_run:
+            self.logger.info(f"[DRY RUN] Would hide (delete) collection '{collection_name}' (ID: {collection_id})")
+            return True
+        else:
+            self.logger.info(f"Hiding collection '{collection_name}' (ID: {collection_id})")
+            return self.emby.delete_collection(collection_id)
+
     def get_collection_stats(self, collection_name: str) -> Optional[Dict]:
         """
         Get statistics about a collection
@@ -377,3 +424,31 @@ class CollectionManager:
             'created': collection.get('DateCreated'),
             'modified': collection.get('DateModified')
         }
+
+    def _set_collection_image(self, collection_id: str, image_path: str) -> bool:
+        """
+        Set image for a collection
+
+        Args:
+            collection_id: Collection ID
+            image_path: Path to image file
+
+        Returns:
+            True if successful
+        """
+        import os
+
+        # Make path absolute if it's relative
+        if not os.path.isabs(image_path):
+            # Try relative to current working directory
+            abs_path = os.path.abspath(image_path)
+            if not os.path.exists(abs_path):
+                self.logger.error(f"Image file not found: {image_path} (tried {abs_path})")
+                return False
+            image_path = abs_path
+
+        if self.dry_run:
+            self.logger.info(f"[DRY RUN] Would set image from {image_path}")
+            return True
+
+        return self.emby.set_collection_image(collection_id, image_path)
