@@ -248,6 +248,7 @@ class EmbyCollectionSync:
         source = collection_config.get('source')
         overview = collection_config.get('overview')
         image_path = collection_config.get('image')
+        display_order = collection_config.get('display_order')
 
         self.logger.info(f"Syncing collection: {name} (source: {source})")
 
@@ -272,7 +273,12 @@ class EmbyCollectionSync:
                 self.logger.info(f"Sorted {len(movies)} movies by title (A-Z)")
 
         # Sync with Emby
-        stats = self.collection_manager.sync_collection(name, movies, overview=overview, image_path=image_path)
+        stats = self.collection_manager.sync_collection(
+            name, movies,
+            overview=overview,
+            image_path=image_path,
+            display_order=display_order
+        )
 
         self.logger.info(f"Collection '{name}': {stats['added']} added, {stats['removed']} removed, "
                         f"{stats['not_found']} not found in library")

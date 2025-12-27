@@ -36,11 +36,17 @@ collections:
     # schedule: "daily"
     # Optional: Add a description/overview for the collection
     overview: "Most watched movies this week"
+    # Optional: Set display order metadata (controls default sort field)
+    # Valid values: "PremiereDate" (release date) or "SortName" (alphabetical)
+    # Note: This always sorts ascending (oldest->newest, A->Z)
+    # Users can manually change sort order in their Emby client
+    display_order: "PremiereDate"
 
   - name: "IMDb Top 250"
     source: "mdblist"
     list_id: "top-rated-movies"
     overview: "Top 250 movies as rated by IMDb users"
+    display_order: "PremiereDate"
 
   # Seasonal collection example - only appears during specified date range
   - name: "Christmas Movies"

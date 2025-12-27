@@ -34,7 +34,8 @@ class CollectionManager:
         self.logger = logging.getLogger(__name__)
         self.managed_collection_names = set()  # Track which collections we manage
 
-    def sync_collection(self, collection_name: str, movies: List[Dict], overview: str = None, image_path: str = None) -> Dict[str, int]:
+    def sync_collection(self, collection_name: str, movies: List[Dict], overview: str = None,
+                       image_path: str = None, display_order: str = None) -> Dict[str, int]:
         """
         Sync a collection with a list of movies
 
@@ -43,6 +44,7 @@ class CollectionManager:
             movies: List of movie dicts from external source
             overview: Optional description/overview for the collection
             image_path: Optional path to image file for the collection
+            display_order: Optional display order metadata ("PremiereDate" or "SortName")
 
         Returns:
             Dict with stats: {'added': int, 'removed': int, 'total': int, 'not_found': int}
@@ -89,9 +91,11 @@ class CollectionManager:
             collection_id = collection['Id']
             self.logger.info(f"Collection '{collection_name}' already exists (ID: {collection_id})")
 
-            # Update overview if provided
+            # Update metadata if provided
             if overview:
                 self.emby.update_collection_metadata(collection_id, overview=overview)
+            if display_order:
+                self.emby.update_collection_display_order(collection_id, display_order)
 
             # Update image if provided
             if image_path:
@@ -140,14 +144,19 @@ class CollectionManager:
                 stats['added'] = len(matched_item_ids)
             else:
                 try:
-                    result = self.emby.create_collection(collection_name, matched_item_ids, overview=overview)
+                    result = self.emby.create_collection(
+                        collection_name,
+                        matched_item_ids,
+                        overview=overview,
+                        display_order=display_order
+                    )
                     stats['added'] = len(matched_item_ids)
                     self.logger.info(f"Created new collection '{collection_name}' with {len(matched_item_ids)} items")
 
                     # Set image if provided
-                    if image_path and result:
+                    if result:
                         collection_id = result.get('Id')
-                        if collection_id:
+                        if collection_id and image_path:
                             self._set_collection_image(collection_id, image_path)
                 except Exception as e:
                     self.logger.error(f"Failed to create collection '{collection_name}': {e}")
