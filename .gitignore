@@ -30,6 +30,9 @@ config.yaml
 *.log
 logs/
 
+# Metadata cache
+.metadata_cache.json
+
 # IDE
 .vscode/
 .idea/

@@ -7,6 +7,7 @@ import requests
 import logging
 from typing import List, Dict, Optional, Any
 from urllib.parse import urljoin, quote
+from metadata_tracker import MetadataTracker
 
 
 class EmbyClient:
@@ -32,6 +33,9 @@ class EmbyClient:
             'X-Emby-Token': api_key,
             'Content-Type': 'application/json'
         })
+
+        # Metadata tracker for detecting manual edits
+        self.metadata_tracker = MetadataTracker()
 
     def _make_request(self, method: str, endpoint: str, **kwargs) -> Any:
         """
@@ -622,52 +626,54 @@ class EmbyClient:
                 return False
 
             # Update the fields
-            # Only update if current value is empty/null or matches what we would set
-            # This preserves manual edits in Emby
+            # Use metadata tracker to detect manual edits
             modified = False
-
-            # Unlock fields if needed
-            locked_fields = item.get('LockedFields', [])
 
             if overview:
                 current_overview = item.get('Overview', '')
-                # Only update if empty or matches our config (not manually edited)
-                if not current_overview or current_overview == overview:
-                    item['Overview'] = overview
-                    # Unlock Overview field if locked
-                    if 'Overview' in locked_fields:
-                        locked_fields.remove('Overview')
-                        item['LockedFields'] = locked_fields
-                    modified = True
+                tracked_overview = self.metadata_tracker.get_tracked_value(collection_id, 'Overview')
+
+                # If we have a tracked value and current differs from it, it was manually edited
+                if tracked_overview is not None and current_overview != tracked_overview:
+                    self.logger.info(f"Preserving manual overview edit for collection {collection_id}")
                 else:
-                    self.logger.debug(f"Preserving manual overview edit for collection {collection_id}")
+                    # Update if different from what we want to set
+                    if current_overview != overview:
+                        item['Overview'] = overview
+                        modified = True
+                    # Always track what we're setting (even if we didn't change it)
+                    self.metadata_tracker.track_metadata(collection_id, 'Overview', overview)
 
             if sort_name:
                 current_sort_name = item.get('SortName', '')
-                # Only update if empty or matches our config (not manually edited)
-                if not current_sort_name or current_sort_name == sort_name:
-                    item['SortName'] = sort_name
-                    item['ForcedSortName'] = sort_name  # Also set ForcedSortName
-                    # Unlock SortName field if locked
-                    if 'SortName' in locked_fields:
-                        locked_fields.remove('SortName')
-                        item['LockedFields'] = locked_fields
-                    modified = True
+                tracked_sort_name = self.metadata_tracker.get_tracked_value(collection_id, 'SortName')
+
+                # If we have a tracked value and current differs from it, it was manually edited
+                if tracked_sort_name is not None and current_sort_name != tracked_sort_name:
+                    self.logger.info(f"Preserving manual sort name edit for collection {collection_id}")
                 else:
-                    self.logger.debug(f"Preserving manual sort name edit for collection {collection_id}")
+                    # Update if different from what we want to set
+                    if current_sort_name != sort_name:
+                        item['SortName'] = sort_name
+                        item['ForcedSortName'] = sort_name  # Also set ForcedSortName
+                        modified = True
+                    # Always track what we're setting
+                    self.metadata_tracker.track_metadata(collection_id, 'SortName', sort_name)
 
             if name:
                 current_name = item.get('Name', '')
-                # Only update if empty or matches our config (not manually edited)
-                if not current_name or current_name == name:
-                    item['Name'] = name
-                    # Unlock Name field if locked
-                    if 'Name' in locked_fields:
-                        locked_fields.remove('Name')
-                        item['LockedFields'] = locked_fields
-                    modified = True
+                tracked_name = self.metadata_tracker.get_tracked_value(collection_id, 'Name')
+
+                # If we have a tracked value and current differs from it, it was manually edited
+                if tracked_name is not None and current_name != tracked_name:
+                    self.logger.info(f"Preserving manual name edit for collection {collection_id}")
                 else:
-                    self.logger.debug(f"Preserving manual name edit for collection {collection_id}")
+                    # Update if different from what we want to set
+                    if current_name != name:
+                        item['Name'] = name
+                        modified = True
+                    # Always track what we're setting
+                    self.metadata_tracker.track_metadata(collection_id, 'Name', name)
 
             if not modified:
                 return True
