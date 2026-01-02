@@ -39,8 +39,8 @@ See [UNRAID_INSTALL.md](UNRAID_INSTALL.md) for complete Unraid installation guid
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/emby.git
-cd emby
+git clone https://github.com/yourusername/emby-collections.git
+cd emby-collections
 
 # Create virtual environment (recommended)
 python3 -m venv venv
@@ -170,7 +170,7 @@ Add to crontab (`crontab -e`):
 
 ```bash
 # Run daily at 2 AM
-0 2 * * * cd /path/to/emby && /path/to/venv/bin/activate && python emby_collections.py
+0 2 * * * cd /path/to/emby-collections && /path/to/venv/bin/activate && python emby_collections.py
 ```
 
 ### Windows (Task Scheduler)
@@ -181,7 +181,7 @@ Add to crontab (`crontab -e`):
 4. Action: Start a program
    - Program: `C:\path\to\venv\Scripts\python.exe`
    - Arguments: `emby_collections.py`
-   - Start in: `C:\path\to\emby`
+   - Start in: `C:\path\to\emby-collections`
 
 ## MDBList Lists
 
@@ -358,7 +358,7 @@ See [UNRAID_INSTALL.md](UNRAID_INSTALL.md) for Unraid-specific troubleshooting.
 ## Project Structure
 
 ```
-emby/
+emby-collections/
 ├── emby_collections.py          # Main script
 ├── config.yaml                  # Your configuration (create from example)
 ├── config.yaml.example          # Configuration template

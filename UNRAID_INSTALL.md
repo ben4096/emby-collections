@@ -30,7 +30,7 @@ Ce guide explique comment installer et configurer Emby Collections Sync sur Unra
    - **IMPORTANT** : Modifiez les variables en haut du script :
      ```bash
      INSTALL_DIR="/mnt/user/appdata/emby-collections"  # Chemin d'installation
-     REPO_URL="https://github.com/VOTRE_USERNAME/emby.git"  # Votre repo
+     REPO_URL="https://github.com/VOTRE_USERNAME/emby-collections.git"  # Votre repo
      ```
 
 3. **Sauvegardez et rendez le script exécutable**
@@ -64,7 +64,7 @@ mkdir -p /mnt/user/appdata/emby-collections
 cd /mnt/user/appdata/emby-collections
 
 # Clonez le repository
-git clone https://github.com/VOTRE_USERNAME/emby.git .
+git clone https://github.com/VOTRE_USERNAME/emby-collections.git .
 
 # Créez l'environnement virtuel
 python3 -m venv venv
