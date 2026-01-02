@@ -30,10 +30,9 @@ See [UNRAID_INSTALL.md](UNRAID_INSTALL.md) for complete Unraid installation guid
 2. Install User Scripts plugin
 3. Create a new user script named `emby-collections`
 4. Copy content from [unraid_user_script.sh](unraid_user_script.sh)
-5. Edit the `REPO_URL` variable to point to your fork
-6. Run the script to initialize
-7. Edit `/mnt/user/appdata/emby-collections/config.yaml` with your API keys
-8. Run again and schedule it
+5. Run the script to initialize
+6. Edit `/mnt/user/appdata/emby-collections/config.yaml` with your API keys
+7. Run again and schedule it
 
 ### Option 2: Local/Server Installation
 
