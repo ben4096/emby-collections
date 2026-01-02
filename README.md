@@ -9,6 +9,7 @@ Automatically create and sync Emby collections based on external movie lists fro
 - **Smart Sync**: Add new items and optionally remove items no longer in lists
 - **Seasonal Collections**: Show/hide collections based on date ranges
 - **Custom Images**: Set custom collection posters
+- **Manual Edit Preservation**: Keeps your manual edits to collection metadata and images
 - **Dry Run Mode**: Test without making changes
 - **Detailed Logging**: Track all operations
 - **Unraid Support**: User Scripts integration with automated setup
@@ -290,6 +291,22 @@ Control default sort field in Emby:
   display_order: "PremiereDate"  # or "SortName"
   sort_title: "01"  # Controls collection order in library
 ```
+
+### Manual Edits Preservation
+
+The script automatically preserves manual edits made in Emby:
+
+- **Overview/Description**: If you edit the description in Emby, it won't be overwritten
+- **Collection Name**: Manual name changes are preserved
+- **Sort Name**: Edit in Emby to customize collection order - changes are kept
+- **Images**: Custom images set in Emby are preserved
+
+This allows you to:
+1. Set initial values via config.yaml
+2. Fine-tune them manually in Emby
+3. Run syncs without losing your customizations
+
+**Note**: Only empty or config-matching values are updated. Manual edits are detected and preserved.
 
 ## Configuration Options
 
