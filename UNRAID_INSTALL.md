@@ -1,146 +1,152 @@
-# Installation sur Unraid
+# Unraid Installation Guide
 
-Ce guide explique comment installer et configurer Emby Collections Sync sur Unraid en utilisant un User Script.
+This guide explains how to install and configure Emby Collections Sync on Unraid using a User Script.
 
-## Prérequis
+## Prerequisites
 
-1. **Python 3** doit être installé sur Unraid
-   - Allez dans **Settings** → **Plugins** → cherchez "Python"
-   - Ou installez via **NerdTools** ou **Community Applications**
-   - Vérifiez l'installation avec `python3 --version`
+1. **Python 3** must be installed on Unraid
+   - Go to **Settings** → **Plugins** → search for "Python"
+   - Or install via **NerdTools** or **Community Applications**
+   - Verify installation with `python3 --version`
 
 2. **User Scripts Plugin**
-   - Installez depuis Community Applications si pas déjà fait
-   - Cherchez "User Scripts" par Andrew Zawadzki
+   - Install from Community Applications if not already installed
+   - Search for "User Scripts" by Andrew Zawadzki
 
-3. **Git** (généralement déjà installé sur Unraid)
+3. **Git** (usually already installed on Unraid)
 
 ## Installation
 
-### Méthode 1 : Installation automatique avec le script
+### Method 1: Automatic Installation with Script
 
-1. **Créez un nouveau User Script**
-   - Allez dans **Settings** → **User Scripts**
-   - Cliquez sur **Add New Script**
-   - Nommez-le `emby-collections`
+1. **Create a new User Script**
+   - Go to **Settings** → **User Scripts**
+   - Click **Add New Script**
+   - Name it `emby-collections`
 
-2. **Copiez le script**
-   - Éditez le script que vous venez de créer
-   - Copiez le contenu de `unraid_user_script.sh` dans l'éditeur
-   - **IMPORTANT** : Modifiez les variables en haut du script :
-     ```bash
-     INSTALL_DIR="/mnt/user/appdata/emby-collections"  # Chemin d'installation
-     REPO_URL="https://github.com/VOTRE_USERNAME/emby-collections.git"  # Votre repo
-     ```
+2. **Copy the script**
+   - Edit the script you just created
+   - Copy the content from `unraid_user_script.sh` into the editor
+   - The default repo URL is already configured, no changes needed
 
-3. **Sauvegardez et rendez le script exécutable**
-   - Cliquez sur **Save**
-   - Le script est automatiquement exécutable
+3. **Save the script**
+   - Click **Save**
+   - The script is automatically executable
 
-4. **Première exécution**
-   - Cliquez sur **Run Script**
-   - Le script va :
-     - Cloner le repository
-     - Créer un environnement virtuel Python
-     - Installer les dépendances
-     - Créer un fichier `config.yaml` à partir de l'exemple
+4. **First run**
+   - Click **Run Script**
+   - The script will:
+     - Clone the repository
+     - Create a Python virtual environment
+     - Install dependencies
+     - Create a `config.yaml` file from example
 
-5. **Configurez votre fichier config**
-   - Éditez `/mnt/user/appdata/emby-collections/config.yaml`
-   - Ajoutez vos clés API Emby, MDBList, Trakt
-   - Configurez vos collections
+5. **Configure your config file**
+   - Edit `/mnt/user/appdata/emby-collections/config.yaml`
+   - Add your Emby, MDBList, Trakt API keys
+   - Configure your collections
 
-6. **Lancez à nouveau le script**
-   - Retournez dans User Scripts
-   - Cliquez sur **Run Script** pour lancer le premier sync
+6. **Run the script again**
+   - Go back to User Scripts
+   - Click **Run Script** to launch the first sync
 
-### Méthode 2 : Installation manuelle
+### Method 2: Manual Installation
 
 ```bash
-# Connectez-vous en SSH à Unraid
+# Connect to Unraid via SSH
 
-# Créez le répertoire d'installation
+# Create installation directory
 mkdir -p /mnt/user/appdata/emby-collections
 cd /mnt/user/appdata/emby-collections
 
-# Clonez le repository
-git clone https://github.com/VOTRE_USERNAME/emby-collections.git .
+# Clone the repository
+git clone https://github.com/ben4096/emby-collections.git .
 
-# Créez l'environnement virtuel
+# Create virtual environment
 python3 -m venv venv
 
-# Activez l'environnement virtuel
+# Activate virtual environment
 source venv/bin/activate
 
-# Installez les dépendances
+# Install dependencies
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# Créez votre config (exemple fonctionnel ou template vierge)
-cp config.yaml.example config.yaml  # Exemple fonctionnel recommandé
-# OU: cp config.yaml.template config.yaml  # Template vierge
-nano config.yaml  # Éditez avec vos paramètres
+# Create your config (working example or blank template)
+cp config.yaml.example config.yaml  # Recommended: working example
+# OR: cp config.yaml.template config.yaml  # Blank template
+nano config.yaml  # Edit with your settings
 
-# Test manuel
-python emby_collections.py --once
+# Manual test
+python emby_collections.py
 
-# Désactivez l'environnement
+# Deactivate environment
 deactivate
 ```
 
-## Configuration du planning
+## Scheduling
 
-Une fois que tout fonctionne :
+Once everything works:
 
-1. Allez dans **Settings** → **User Scripts**
-2. Trouvez votre script `emby-collections`
-3. Cliquez sur **Schedule Disabled**
-4. Choisissez une fréquence :
-   - **Daily** : Chaque jour à une heure précise (recommandé)
-   - **Hourly** : Toutes les heures
-   - **Custom** : Cron personnalisé
+1. Go to **Settings** → **User Scripts**
+2. Find your `emby-collections` script
+3. Click **Schedule Disabled**
+4. Choose a frequency:
+   - **Daily**: Once per day at midnight
+   - **Hourly**: Every hour
+   - **Custom**: Custom cron expression (recommended for specific times)
 
-### Exemple de cron personnalisé
+### Custom Cron Examples
 
-Pour exécuter tous les jours à 2h du matin :
+To run every day at 2 AM:
 ```
 0 2 * * *
 ```
 
-Pour exécuter toutes les 6 heures :
+To run every 6 hours:
 ```
 0 */6 * * *
 ```
 
-## Structure des fichiers
+To run every Sunday at 4 AM:
+```
+0 4 * * 0
+```
 
-Après installation, voici la structure dans `/mnt/user/appdata/emby-collections/` :
+## File Structure
+
+After installation, here's the structure in `/mnt/user/appdata/emby-collections/`:
 
 ```
 emby-collections/
-├── venv/                      # Environnement virtuel Python (créé automatiquement)
-├── src/                       # Code source
-├── emby_collections.py        # Script principal
-├── config.yaml               # Votre configuration
-├── requirements.txt          # Dépendances Python
-└── emby_collections.log      # Fichier de logs
+├── venv/                      # Python virtual environment (auto-created)
+├── src/                       # Source code
+├── emby_collections.py        # Main script
+├── config.yaml               # Your configuration
+├── requirements.txt          # Python dependencies
+└── emby_collections.log      # Log file
 ```
 
-## Vérification des logs
+## Viewing Logs
 
-Pour voir les logs de votre dernière exécution :
+To see logs from your last execution:
 
 ```bash
 tail -f /mnt/user/appdata/emby-collections/emby_collections.log
 ```
 
-Ou depuis User Scripts, cliquez sur le bouton de logs de votre script.
+Or from User Scripts, click the log button for your script (may show "UNDEFINED" due to UI bug, but logs are written to file).
 
-## Mise à jour
+View last 50 lines:
+```bash
+tail -50 /mnt/user/appdata/emby-collections/emby_collections.log
+```
 
-Le script se met à jour automatiquement à chaque exécution via `git pull`.
+## Updates
 
-Pour forcer une mise à jour :
+The script auto-updates on each run via `git pull`.
+
+To force an update:
 ```bash
 cd /mnt/user/appdata/emby-collections
 git pull
@@ -149,49 +155,53 @@ pip install -r requirements.txt --upgrade
 deactivate
 ```
 
-## Dépannage
+## Troubleshooting
 
-### Python 3 non trouvé
+### Python 3 not found
 ```bash
-# Vérifiez où est Python 3
+# Check where Python 3 is located
 which python3
 
-# Si différent de /usr/bin/python3, modifiez PYTHON_BIN dans le script
+# If different from /usr/bin/python3, modify PYTHON_BIN in the script
 ```
 
-### Erreur de module venv
+### venv module error
 ```bash
-# Python 3 minimal, installez le package complet depuis NerdTools
+# Python 3 is minimal, install the full package from NerdTools
 ```
 
 ### Permission denied
 ```bash
-# Rendez le script exécutable
+# Make the script executable
 chmod +x /boot/config/plugins/user.scripts/scripts/emby-collections/script
 ```
 
-### Erreur de connexion à Emby
-- Vérifiez l'URL Emby dans `config.yaml`
-- Vérifiez que la clé API est correcte
-- Assurez-vous qu'Emby est accessible depuis Unraid
+### Emby connection error
+- Verify Emby URL in `config.yaml`
+- Verify API key is correct
+- Ensure Emby is accessible from Unraid
 
-## Test manuel
+### Repository not found (private repo)
+- Make sure your repository is public on GitHub
+- Or configure git credentials for private repos
 
-Pour tester manuellement sans User Scripts :
+## Manual Testing
+
+To test manually without User Scripts:
 
 ```bash
 cd /mnt/user/appdata/emby-collections
 source venv/bin/activate
-python emby_collections.py --once --dry-run
+python emby_collections.py --dry-run
 deactivate
 ```
 
-L'option `--dry-run` permet de tester sans modifier Emby.
+The `--dry-run` option allows testing without modifying Emby.
 
-## Désinstallation
+## Uninstallation
 
 ```bash
-# Supprimez le User Script depuis l'interface web
-# Puis supprimez les fichiers
+# Delete the User Script from the web interface
+# Then delete the files
 rm -rf /mnt/user/appdata/emby-collections
 ```
