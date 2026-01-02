@@ -9,8 +9,6 @@ import os
 import logging
 import yaml
 import argparse
-import schedule
-import time
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, List
@@ -249,6 +247,7 @@ class EmbyCollectionSync:
         overview = collection_config.get('overview')
         image_path = collection_config.get('image')
         display_order = collection_config.get('display_order')
+        sort_title = collection_config.get('sort_title')
 
         self.logger.info(f"Syncing collection: {name} (source: {source})")
 
@@ -277,7 +276,8 @@ class EmbyCollectionSync:
             name, movies,
             overview=overview,
             image_path=image_path,
-            display_order=display_order
+            display_order=display_order,
+            sort_title=sort_title
         )
 
         self.logger.info(f"Collection '{name}': {stats['added']} added, {stats['removed']} removed, "
@@ -331,34 +331,11 @@ class EmbyCollectionSync:
             self.logger.error(f"Unknown source: {source}")
             return []
 
-    def run_once(self):
-        """Run sync once"""
-        self.logger.info("Starting Emby Collection Sync")
-        self.sync_all_collections()
-        self.logger.info("Sync completed")
-
-    def run_scheduled(self):
-        """Run with scheduler"""
-        settings = self.config.get('settings', {})
-        schedule_time = settings.get('schedule_time', '02:00')
-
-        self.logger.info(f"Scheduling daily sync at {schedule_time}")
-        schedule.every().day.at(schedule_time).do(self.run_once)
-
-        # Run once immediately
-        self.run_once()
-
-        # Then run on schedule
-        while True:
-            schedule.run_pending()
-            time.sleep(60)  # Check every minute
-
-    def run(self, once: bool = False, config_loaded: bool = False):
+    def run(self, config_loaded: bool = False):
         """
         Main run method
 
         Args:
-            once: If True, run once and exit. Otherwise, run on schedule
             config_loaded: If True, config already loaded (for CLI overrides)
         """
         if not config_loaded:
@@ -366,10 +343,9 @@ class EmbyCollectionSync:
         self.setup_logging()
         self.initialize_clients()
 
-        if once:
-            self.run_once()
-        else:
-            self.run_scheduled()
+        self.logger.info("Starting Emby Collection Sync")
+        self.sync_all_collections()
+        self.logger.info("Sync completed")
 
 
 def main():
@@ -381,11 +357,6 @@ def main():
         '-c', '--config',
         default='config.yaml',
         help='Path to config file (default: config.yaml)'
-    )
-    parser.add_argument(
-        '--once',
-        action='store_true',
-        help='Run once and exit (instead of scheduling)'
     )
     parser.add_argument(
         '--dry-run',
@@ -428,7 +399,7 @@ def main():
         app.config['settings']['delete_unlisted'] = True
 
     try:
-        app.run(once=args.once, config_loaded=True)
+        app.run(config_loaded=True)
     except KeyboardInterrupt:
         print("\n\nInterrupted by user")
         sys.exit(0)

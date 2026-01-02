@@ -35,7 +35,7 @@ class CollectionManager:
         self.managed_collection_names = set()  # Track which collections we manage
 
     def sync_collection(self, collection_name: str, movies: List[Dict], overview: str = None,
-                       image_path: str = None, display_order: str = None) -> Dict[str, int]:
+                       image_path: str = None, display_order: str = None, sort_title: str = None) -> Dict[str, int]:
         """
         Sync a collection with a list of movies
 
@@ -45,6 +45,7 @@ class CollectionManager:
             overview: Optional description/overview for the collection
             image_path: Optional path to image file for the collection
             display_order: Optional display order metadata ("PremiereDate" or "SortName")
+            sort_title: Optional sort title for custom collection ordering
 
         Returns:
             Dict with stats: {'added': int, 'removed': int, 'total': int, 'not_found': int}
@@ -92,8 +93,8 @@ class CollectionManager:
             self.logger.info(f"Collection '{collection_name}' already exists (ID: {collection_id})")
 
             # Update metadata if provided
-            if overview:
-                self.emby.update_collection_metadata(collection_id, overview=overview)
+            if overview or sort_title:
+                self.emby.update_collection_metadata(collection_id, overview=overview, sort_name=sort_title)
             if display_order:
                 self.emby.update_collection_display_order(collection_id, display_order)
 
@@ -148,7 +149,8 @@ class CollectionManager:
                         collection_name,
                         matched_item_ids,
                         overview=overview,
-                        display_order=display_order
+                        display_order=display_order,
+                        sort_name=sort_title
                     )
                     stats['added'] = len(matched_item_ids)
                     self.logger.info(f"Created new collection '{collection_name}' with {len(matched_item_ids)} items")

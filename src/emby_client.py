@@ -139,7 +139,7 @@ class EmbyClient:
 
     def create_collection(self, name: str, item_ids: List[str], parent_id: str = None,
                          is_locked: bool = False, overview: str = None,
-                         display_order: str = None) -> Optional[Dict]:
+                         display_order: str = None, sort_name: str = None) -> Optional[Dict]:
         """
         Create a new collection
 
@@ -150,6 +150,7 @@ class EmbyClient:
             is_locked: Whether to lock the collection
             overview: Optional description/overview for the collection
             display_order: Optional display order ("PremiereDate" for release date, "SortName" for sort title)
+            sort_name: Optional sort title for custom sorting of the collection itself
 
         Returns:
             Created collection data
@@ -180,9 +181,9 @@ class EmbyClient:
                 if display_order:
                     self.update_collection_display_order(collection_id, display_order)
 
-                # Update overview if provided
-                if overview:
-                    self.update_collection_metadata(collection_id, overview=overview)
+                # Update overview and sort name if provided
+                if overview or sort_name:
+                    self.update_collection_metadata(collection_id, overview=overview, sort_name=sort_name)
 
             return result
         except Exception as e:
@@ -583,47 +584,95 @@ class EmbyClient:
             return 0
         """
 
-    def update_collection_metadata(self, collection_id: str, overview: str = None) -> bool:
+    def update_collection_metadata(self, collection_id: str, overview: str = None,
+                                   sort_name: str = None, name: str = None) -> bool:
         """
-        Update collection metadata (e.g., overview/description)
-
-        Note: Emby's API has limited support for updating BoxSet metadata.
-        This method attempts multiple approaches but may not work on all Emby versions.
-        Consider manually editing metadata through Emby's web UI as an alternative.
+        Update collection metadata (overview/description, sort title, name)
 
         Args:
             collection_id: Collection ID
             overview: Overview/description text
+            sort_name: Sort title for custom collection ordering
+            name: Display name (title) of the collection
 
         Returns:
             True if successful
         """
-        if not overview:
+        if not overview and not sort_name and not name:
             return True
 
         try:
-            # Get collection name for logging
-            collections = self.get_collections()
-            collection = None
-            for c in collections:
-                if c.get('Id') == collection_id:
-                    collection = c
-                    break
+            # Get user ID for fetching the item
+            if self.user_id:
+                user_id = self.user_id
+            else:
+                # Get first user's ID
+                users = self._make_request('GET', '/emby/Users')
+                if not users:
+                    self.logger.warning("No users found, cannot update collection metadata")
+                    return False
+                user_id = users[0].get('Id')
 
-            collection_name = collection.get('Name', collection_id) if collection else collection_id
+            # Get the current item data via user endpoint
+            get_endpoint = f'/emby/Users/{user_id}/Items/{collection_id}'
+            item = self._make_request('GET', get_endpoint)
 
-            # Note: Emby's API doesn't fully support updating BoxSet/Collection metadata programmatically
-            # in many versions. The overview may need to be set manually in the web UI.
-            # We log this as a warning rather than an error since the collection itself is created successfully.
-            self.logger.info(f"Overview set in config for collection '{collection_name}': {overview[:80]}...")
-            self.logger.info(f"Note: To ensure the overview appears in Emby, you may need to edit the collection metadata manually in the Emby web UI")
+            if not item:
+                self.logger.error(f"Could not fetch collection {collection_id}")
+                return False
 
-            # Return True since this isn't a critical failure - the collection was created successfully
+            # Update the fields
+            modified = False
+
+            # Unlock fields if needed
+            locked_fields = item.get('LockedFields', [])
+
+            if overview:
+                item['Overview'] = overview
+                # Unlock Overview field if locked
+                if 'Overview' in locked_fields:
+                    locked_fields.remove('Overview')
+                    item['LockedFields'] = locked_fields
+                modified = True
+
+            if sort_name:
+                item['SortName'] = sort_name
+                item['ForcedSortName'] = sort_name  # Also set ForcedSortName
+                # Unlock SortName field if locked
+                if 'SortName' in locked_fields:
+                    locked_fields.remove('SortName')
+                    item['LockedFields'] = locked_fields
+                modified = True
+
+            if name:
+                item['Name'] = name
+                # Unlock Name field if locked
+                if 'Name' in locked_fields:
+                    locked_fields.remove('Name')
+                    item['LockedFields'] = locked_fields
+                modified = True
+
+            if not modified:
+                return True
+
+            # Update via the Items endpoint (POST to update)
+            update_endpoint = f'/emby/Items/{collection_id}'
+            self._make_request('POST', update_endpoint, json=item)
+
+            collection_name = item.get('Name', collection_id)
+            changes = []
+            if name:
+                changes.append(f"name to '{name}'")
+            if overview:
+                changes.append(f"overview")
+            if sort_name:
+                changes.append(f"sort title to '{sort_name}'")
+
+            self.logger.info(f"Updated {collection_name}: {', '.join(changes)}")
             return True
 
         except Exception as e:
-            self.logger.debug(f"Could not update collection metadata: {e}")
-            # This is not critical, so we'll log and continue
+            self.logger.error(f"Failed to update collection metadata for {collection_id}: {e}")
             return False
 
     def set_collection_image(self, collection_id: str, image_path: str) -> bool:

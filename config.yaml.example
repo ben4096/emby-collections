@@ -100,5 +100,6 @@ settings:
   # Remove items from collection if they're no longer in the source list
   remove_missing: true
 
-  # Schedule time (24h format, e.g., "02:00" for 2 AM)
-  schedule_time: "02:00"
+  # Delete collections not listed in config (WARNING: deletes collections, NOT movies/shows)
+  # Can also be enabled with --delete-unlisted flag
+  delete_unlisted: false
