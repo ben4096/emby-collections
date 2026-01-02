@@ -622,35 +622,52 @@ class EmbyClient:
                 return False
 
             # Update the fields
+            # Only update if current value is empty/null or matches what we would set
+            # This preserves manual edits in Emby
             modified = False
 
             # Unlock fields if needed
             locked_fields = item.get('LockedFields', [])
 
             if overview:
-                item['Overview'] = overview
-                # Unlock Overview field if locked
-                if 'Overview' in locked_fields:
-                    locked_fields.remove('Overview')
-                    item['LockedFields'] = locked_fields
-                modified = True
+                current_overview = item.get('Overview', '')
+                # Only update if empty or matches our config (not manually edited)
+                if not current_overview or current_overview == overview:
+                    item['Overview'] = overview
+                    # Unlock Overview field if locked
+                    if 'Overview' in locked_fields:
+                        locked_fields.remove('Overview')
+                        item['LockedFields'] = locked_fields
+                    modified = True
+                else:
+                    self.logger.debug(f"Preserving manual overview edit for collection {collection_id}")
 
             if sort_name:
-                item['SortName'] = sort_name
-                item['ForcedSortName'] = sort_name  # Also set ForcedSortName
-                # Unlock SortName field if locked
-                if 'SortName' in locked_fields:
-                    locked_fields.remove('SortName')
-                    item['LockedFields'] = locked_fields
-                modified = True
+                current_sort_name = item.get('SortName', '')
+                # Only update if empty or matches our config (not manually edited)
+                if not current_sort_name or current_sort_name == sort_name:
+                    item['SortName'] = sort_name
+                    item['ForcedSortName'] = sort_name  # Also set ForcedSortName
+                    # Unlock SortName field if locked
+                    if 'SortName' in locked_fields:
+                        locked_fields.remove('SortName')
+                        item['LockedFields'] = locked_fields
+                    modified = True
+                else:
+                    self.logger.debug(f"Preserving manual sort name edit for collection {collection_id}")
 
             if name:
-                item['Name'] = name
-                # Unlock Name field if locked
-                if 'Name' in locked_fields:
-                    locked_fields.remove('Name')
-                    item['LockedFields'] = locked_fields
-                modified = True
+                current_name = item.get('Name', '')
+                # Only update if empty or matches our config (not manually edited)
+                if not current_name or current_name == name:
+                    item['Name'] = name
+                    # Unlock Name field if locked
+                    if 'Name' in locked_fields:
+                        locked_fields.remove('Name')
+                        item['LockedFields'] = locked_fields
+                    modified = True
+                else:
+                    self.logger.debug(f"Preserving manual name edit for collection {collection_id}")
 
             if not modified:
                 return True
@@ -731,6 +748,41 @@ class EmbyClient:
 
         except Exception as e:
             self.logger.error(f"Failed to set image for collection {collection_id}: {e}")
+            return False
+
+    def collection_has_custom_image(self, collection_id: str) -> bool:
+        """
+        Check if a collection has a custom primary image set
+
+        Args:
+            collection_id: Collection ID
+
+        Returns:
+            True if collection has a custom image
+        """
+        try:
+            # Get user ID
+            if self.user_id:
+                user_id = self.user_id
+            else:
+                users = self._make_request('GET', '/emby/Users')
+                if not users:
+                    return False
+                user_id = users[0].get('Id')
+
+            # Get collection info
+            endpoint = f'/emby/Users/{user_id}/Items/{collection_id}'
+            item = self._make_request('GET', endpoint)
+
+            if not item:
+                return False
+
+            # Check if it has ImageTags for Primary image
+            image_tags = item.get('ImageTags', {})
+            return 'Primary' in image_tags
+
+        except Exception as e:
+            self.logger.error(f"Error checking image for collection {collection_id}: {e}")
             return False
 
     def test_connection(self) -> bool:

@@ -436,13 +436,14 @@ class CollectionManager:
             'modified': collection.get('DateModified')
         }
 
-    def _set_collection_image(self, collection_id: str, image_path: str) -> bool:
+    def _set_collection_image(self, collection_id: str, image_path: str, force: bool = False) -> bool:
         """
         Set image for a collection
 
         Args:
             collection_id: Collection ID
             image_path: Path to image file
+            force: If True, overwrite existing image. If False, preserve manual edits.
 
         Returns:
             True if successful
@@ -457,6 +458,13 @@ class CollectionManager:
                 self.logger.error(f"Image file not found: {image_path} (tried {abs_path})")
                 return False
             image_path = abs_path
+
+        # Check if collection already has a custom image (preserve manual edits)
+        if not force:
+            has_image = self.emby.collection_has_custom_image(collection_id)
+            if has_image:
+                self.logger.debug(f"Collection {collection_id} already has a custom image, preserving it")
+                return True
 
         if self.dry_run:
             self.logger.info(f"[DRY RUN] Would set image from {image_path}")
