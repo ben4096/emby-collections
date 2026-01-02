@@ -19,8 +19,8 @@ INSTALL_DIR="/mnt/user/appdata/emby-collections"
 # Your config file location (will be created if doesn't exist)
 CONFIG_FILE="${INSTALL_DIR}/config.yaml"
 
-# Git repository URL (change if you forked)
-REPO_URL="https://github.com/yourusername/emby-collections.git"
+# Git repository URL (change only if you forked the repo)
+REPO_URL="https://github.com/ben4096/emby-collections.git"
 
 # Python binary location (Unraid default after installing Python 3)
 PYTHON_BIN="/usr/bin/python3"
