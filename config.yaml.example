@@ -1,105 +1,121 @@
 # Emby Collection Manager Configuration
-# Copy this file to config.yaml and fill in your details
+# This is a working example configuration
+# Copy this to config.yaml and update with your own API keys
 
 emby:
-  # Your Emby server URL (including port)
-  url: "http://localhost:8096"
-
-  # Emby API key (get it from Emby Dashboard > Advanced > Security > API Keys)
-  api_key: "YOUR_EMBY_API_KEY_HERE"
-
-  # User ID to create collections for (optional, leave empty for admin)
+  url: "http://your-emby-server:8096"
+  api_key: "YOUR_EMBY_API_KEY"
   user_id: ""
 
-# MDBList configuration
 mdblist:
-  # Get your API key from https://mdblist.com/preferences/
-  api_key: "YOUR_MDBLIST_API_KEY_HERE"
+  api_key: "YOUR_MDBLIST_API_KEY"
 
-# Trakt configuration
 trakt:
-  # Get your API key from https://trakt.tv/oauth/applications
-  client_id: "YOUR_TRAKT_CLIENT_ID_HERE"
-
-  # Optional: for user-specific lists (not needed for public trending/popular)
+  client_id: "YOUR_TRAKT_CLIENT_ID"
   client_secret: ""
   access_token: ""
 
-# List of collections to create/update
 collections:
-  # MDBList examples
-  - name: "Top Watched This Week"
+  # Weekly trending from MDBList
+  - name: "Top Movies of the Week"
     source: "mdblist"
-    # The list URL or ID
-    list_id: "linaspurinis/top-watched-movies-of-the-week"
-    # Update frequency (not implemented yet, for future use)
-    # schedule: "daily"
-    # Optional: Add a description/overview for the collection
-    overview: "Most watched movies this week"
-    # Optional: Set display order metadata (controls default sort field)
-    # Valid values: "PremiereDate" (release date) or "SortName" (alphabetical)
-    # Note: This always sorts ascending (oldest->newest, A->Z)
-    # Users can manually change sort order in their Emby client
+    list_id: "garycrawfordgc/top-movies-of-the-week"
+    sort_title: "01"
     display_order: "PremiereDate"
+    overview: "This list updates daily"
+    image: "images/top-movies-of-the-week.jpeg"
 
-  - name: "IMDb Top 250"
-    source: "mdblist"
-    list_id: "top-rated-movies"
-    overview: "Top 250 movies as rated by IMDb users"
-    display_order: "PremiereDate"
-
-  # Seasonal collection example - only appears during specified date range
+  # Seasonal collection - Christmas
   - name: "Christmas Movies"
     source: "mdblist"
     list_id: "snoak/christmas-movies"
+    sort_title: "00"
+    display_order: "PremiereDate"
     overview: "Merry Christmas everyone!"
-    # Optional: Custom image for the collection (relative to project root or absolute path)
     image: "images/christmas-movies.jpeg"
-    # Seasonal configuration: only show this collection from Dec 15 to Dec 26
     seasonal:
-      start_month: 12  # December
-      start_day: 15    # 15th
-      end_month: 12    # December
-      end_day: 26      # 26th (inclusive)
-    # Note: Collections out of season will be automatically hidden (deleted, but movies remain)
-    # The custom image will be automatically restored when the collection is recreated
+      start_month: 12
+      start_day: 15
+      end_month: 1
+      end_day: 5
 
-  # Trakt examples
+  # Seasonal collection - Halloween
+  - name: "Halloween Vibes"
+    source: "mdblist"
+    list_id: "mrjakemccloy/halloween-vibes"
+    sort_title: "00"
+    display_order: "PremiereDate"
+    overview: "Don't look, but there's someone behind you"
+    image: "images/halloween-vibes.png"
+    seasonal:
+      start_month: 9
+      start_day: 24
+      end_month: 10
+      end_day: 1
+
+  # Trending movies from Trakt
   - name: "Trending Movies"
     source: "trakt"
-    # Options: trending, popular, watched, played, anticipated
     category: "trending"
-    # Optional: limit number of items
-    limit: 50
-    overview: "Currently trending movies"
+    limit: 100
+    sort_by: "rating"
+    sort_title: "02"
+    display_order: "PremiereDate"
+    overview: "This list updates daily"
+    image: "images/trending.jpeg"
 
+  # Most watched this week
+  - name: "Streaming Charts"
+    source: "trakt"
+    category: "watched"
+    limit: 100
+    sort_by: "rating"
+    sort_title: "03"
+    display_order: "PremiereDate"
+    overview: "This list updates daily"
+    image: "images/streaming-charts.jpeg"
+
+  # All-time most played
   - name: "Popular Movies"
     source: "trakt"
-    category: "popular"
+    category: "played"
+    time_period: "all"
+    limit: 500
+    sort_by: "rating"
+    sort_title: "04"
+    display_order: "PremiereDate"
+    overview: "This list updates daily"
+    image: "images/popular-movies.jpeg"
+
+  # Oscars 2025 nominees
+  - name: "Oscars 2025"
+    source: "trakt"
+    username: "pullsa"
+    list_slug: "the-97th-academy-awards-oscars-2025"
     limit: 100
-    overview: "Most popular movies on Trakt"
+    sort_by: "rating"
+    sort_title: "05"
+    display_order: "PremiereDate"
+    overview: "Nominees and winners Oscars 2025"
+    image: "images/oscars-2025.jpeg"
 
-# General settings
+  # All-time Best Picture winners
+  - name: "Best Picture Winners"
+    source: "trakt"
+    username: "thefork"
+    list_slug: "academy-awards-best-picture-winners"
+    limit: 150
+    sort_by: "rating"
+    sort_title: "06"
+    display_order: "PremiereDate"
+    overview: "All time Oscars best picture winners"
+    image: "images/best-picture-winners.png"
+
 settings:
-  # Enable dry-run mode (don't actually create/modify collections)
   dry_run: false
-
-  # Clear existing collections before syncing (removes items from collection, NOT the movies/shows themselves)
-  # Useful for starting fresh. Can also be enabled with --clear flag
-  clear_collections: false
-
-  # Log level (DEBUG, INFO, WARNING, ERROR)
+  clear_collections: true
   log_level: "INFO"
-
-  # Log file path
   log_file: "emby_collections.log"
-
-  # Matching strategy: prefer imdb_id, tmdb_id, or title
   match_priority: ["imdb_id", "tmdb_id", "title"]
-
-  # Remove items from collection if they're no longer in the source list
   remove_missing: true
-
-  # Delete collections not listed in config (WARNING: deletes collections, NOT movies/shows)
-  # Can also be enabled with --delete-unlisted flag
   delete_unlisted: false

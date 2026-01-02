@@ -1,0 +1,105 @@
+# Emby Collection Manager Configuration
+# Copy this file to config.yaml and fill in your details
+
+emby:
+  # Your Emby server URL (including port)
+  url: "http://localhost:8096"
+
+  # Emby API key (get it from Emby Dashboard > Advanced > Security > API Keys)
+  api_key: "YOUR_EMBY_API_KEY_HERE"
+
+  # User ID to create collections for (optional, leave empty for admin)
+  user_id: ""
+
+# MDBList configuration
+mdblist:
+  # Get your API key from https://mdblist.com/preferences/
+  api_key: "YOUR_MDBLIST_API_KEY_HERE"
+
+# Trakt configuration
+trakt:
+  # Get your API key from https://trakt.tv/oauth/applications
+  client_id: "YOUR_TRAKT_CLIENT_ID_HERE"
+
+  # Optional: for user-specific lists (not needed for public trending/popular)
+  client_secret: ""
+  access_token: ""
+
+# List of collections to create/update
+collections:
+  # MDBList examples
+  - name: "Top Watched This Week"
+    source: "mdblist"
+    # The list URL or ID
+    list_id: "linaspurinis/top-watched-movies-of-the-week"
+    # Update frequency (not implemented yet, for future use)
+    # schedule: "daily"
+    # Optional: Add a description/overview for the collection
+    overview: "Most watched movies this week"
+    # Optional: Set display order metadata (controls default sort field)
+    # Valid values: "PremiereDate" (release date) or "SortName" (alphabetical)
+    # Note: This always sorts ascending (oldest->newest, A->Z)
+    # Users can manually change sort order in their Emby client
+    display_order: "PremiereDate"
+
+  - name: "IMDb Top 250"
+    source: "mdblist"
+    list_id: "top-rated-movies"
+    overview: "Top 250 movies as rated by IMDb users"
+    display_order: "PremiereDate"
+
+  # Seasonal collection example - only appears during specified date range
+  - name: "Christmas Movies"
+    source: "mdblist"
+    list_id: "snoak/christmas-movies"
+    overview: "Merry Christmas everyone!"
+    # Optional: Custom image for the collection (relative to project root or absolute path)
+    image: "images/christmas-movies.jpeg"
+    # Seasonal configuration: only show this collection from Dec 15 to Dec 26
+    seasonal:
+      start_month: 12  # December
+      start_day: 15    # 15th
+      end_month: 12    # December
+      end_day: 26      # 26th (inclusive)
+    # Note: Collections out of season will be automatically hidden (deleted, but movies remain)
+    # The custom image will be automatically restored when the collection is recreated
+
+  # Trakt examples
+  - name: "Trending Movies"
+    source: "trakt"
+    # Options: trending, popular, watched, played, anticipated
+    category: "trending"
+    # Optional: limit number of items
+    limit: 50
+    overview: "Currently trending movies"
+
+  - name: "Popular Movies"
+    source: "trakt"
+    category: "popular"
+    limit: 100
+    overview: "Most popular movies on Trakt"
+
+# General settings
+settings:
+  # Enable dry-run mode (don't actually create/modify collections)
+  dry_run: false
+
+  # Clear existing collections before syncing (removes items from collection, NOT the movies/shows themselves)
+  # Useful for starting fresh. Can also be enabled with --clear flag
+  clear_collections: false
+
+  # Log level (DEBUG, INFO, WARNING, ERROR)
+  log_level: "INFO"
+
+  # Log file path
+  log_file: "emby_collections.log"
+
+  # Matching strategy: prefer imdb_id, tmdb_id, or title
+  match_priority: ["imdb_id", "tmdb_id", "title"]
+
+  # Remove items from collection if they're no longer in the source list
+  remove_missing: true
+
+  # Delete collections not listed in config (WARNING: deletes collections, NOT movies/shows)
+  # Can also be enabled with --delete-unlisted flag
+  delete_unlisted: false

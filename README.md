@@ -48,8 +48,9 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Copy example config
-cp config.yaml.example config.yaml
+# Copy example config (or use template for blank start)
+cp config.yaml.example config.yaml  # Working example
+# OR: cp config.yaml.template config.yaml  # Blank template
 
 # Edit config with your settings
 nano config.yaml  # or your preferred editor
@@ -292,7 +293,7 @@ Control default sort field in Emby:
 
 ## Configuration Options
 
-See [config.yaml.example](config.yaml.example) for all available options.
+See [config.yaml.example](config.yaml.example) for a working example or [config.yaml.template](config.yaml.template) for all available options with detailed comments.
 
 Key settings:
 
@@ -359,8 +360,9 @@ See [UNRAID_INSTALL.md](UNRAID_INSTALL.md) for Unraid-specific troubleshooting.
 ```
 emby-collections/
 ├── emby_collections.py          # Main script
-├── config.yaml                  # Your configuration (create from example)
-├── config.yaml.example          # Configuration template
+├── config.yaml                  # Your configuration (create from example/template)
+├── config.yaml.example          # Working example configuration
+├── config.yaml.template         # Blank template with all options
 ├── requirements.txt             # Python dependencies
 ├── README.md                    # This file
 ├── UNRAID_INSTALL.md           # Unraid installation guide

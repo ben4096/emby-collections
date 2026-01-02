@@ -76,8 +76,9 @@ source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# Créez votre config
-cp config.yaml.example config.yaml
+# Créez votre config (exemple fonctionnel ou template vierge)
+cp config.yaml.example config.yaml  # Exemple fonctionnel recommandé
+# OU: cp config.yaml.template config.yaml  # Template vierge
 nano config.yaml  # Éditez avec vos paramètres
 
 # Test manuel
