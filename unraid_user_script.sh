@@ -79,6 +79,8 @@ if [ ! -d "$INSTALL_DIR/.git" ]; then
     fi
 else
     log "Updating repository..."
+    # Fix git ownership issue on Unraid
+    git config --global --add safe.directory "$INSTALL_DIR" 2>/dev/null || true
     git pull
 fi
 
