@@ -636,12 +636,13 @@ class EmbyClient:
                 # If we have a tracked value and current differs from it, it was manually edited
                 if tracked_overview is not None and current_overview != tracked_overview:
                     self.logger.info(f"Preserving manual overview edit for collection {collection_id}")
+                    # DO NOT update and DO NOT track new value - keep the manual edit
                 else:
                     # Update if different from what we want to set
                     if current_overview != overview:
                         item['Overview'] = overview
                         modified = True
-                    # Always track what we're setting (even if we didn't change it)
+                    # Track what we're setting
                     self.metadata_tracker.track_metadata(collection_id, 'Overview', overview)
 
             if sort_name:
@@ -651,13 +652,14 @@ class EmbyClient:
                 # If we have a tracked value and current differs from it, it was manually edited
                 if tracked_sort_name is not None and current_sort_name != tracked_sort_name:
                     self.logger.info(f"Preserving manual sort name edit for collection {collection_id}")
+                    # DO NOT update and DO NOT track new value - keep the manual edit
                 else:
                     # Update if different from what we want to set
                     if current_sort_name != sort_name:
                         item['SortName'] = sort_name
                         item['ForcedSortName'] = sort_name  # Also set ForcedSortName
                         modified = True
-                    # Always track what we're setting
+                    # Track what we're setting
                     self.metadata_tracker.track_metadata(collection_id, 'SortName', sort_name)
 
             if name:
@@ -667,12 +669,13 @@ class EmbyClient:
                 # If we have a tracked value and current differs from it, it was manually edited
                 if tracked_name is not None and current_name != tracked_name:
                     self.logger.info(f"Preserving manual name edit for collection {collection_id}")
+                    # DO NOT update and DO NOT track new value - keep the manual edit
                 else:
                     # Update if different from what we want to set
                     if current_name != name:
                         item['Name'] = name
                         modified = True
-                    # Always track what we're setting
+                    # Track what we're setting
                     self.metadata_tracker.track_metadata(collection_id, 'Name', name)
 
             if not modified:
